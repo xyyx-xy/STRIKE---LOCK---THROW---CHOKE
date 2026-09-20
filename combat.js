@@ -1,8 +1,8 @@
 import {guardBlocks} from './guard.js';
 import {enemyPose} from './rig.js';
 import {initBody,isGone,mobility,damagePart,tickInjury,bleedRate} from './injury.js';
-export const ATTACKS={palm:{duration:.34,active:.11,range:1.85,damage:34,push:2.7,cone:.72,r:.085},kick:{duration:.65,active:.25,range:2.65,damage:48,push:8,cone:.62,r:.12}};
-export function createState(){return {hp:100,time:0,wave:0,kills:0,enemies:[],attack:null,sides:{palm:0,kick:0},waveDelay:1.5,inv:0,ended:false,nextId:0};}
+export const ATTACKS={punch:{duration:.42,active:.14,range:1.95,damage:38,push:3.4,cone:.74,r:.065},palm:{duration:.34,active:.11,range:1.85,damage:34,push:2.7,cone:.72,r:.085},kick:{duration:.65,active:.25,range:2.65,damage:48,push:8,cone:.62,r:.12}};
+export function createState(){return {hp:100,time:0,wave:0,kills:0,enemies:[],attack:null,sides:{palm:0,kick:0,punch:0},waveDelay:1.5,inv:0,ended:false,nextId:0};}
 export function beginAttack(s,type){if(s.ended||s.guard||!ATTACKS[type])return false;if(s.attack){const previous=s.attack;if(type!=='palm'||previous.type!=='palm'||previous.t<ATTACKS.palm.duration*.55||!previous.hit)return false;}s.attack={type,side:s.sides[type],t:0,hit:false};s.sides[type]^=1;return true;}
 export function targetInReach(p,e,a){const dx=e.x-p.x,dz=e.z-p.z,d=Math.hypot(dx,dz);return d<=a.range+.4&&(-Math.sin(p.yaw)*dx-Math.cos(p.yaw)*dz)/Math.max(d,.001)>a.cone;}
 export function enemyParts(e,p){const q=e.pose||enemyPose(e,0,0),yaw=Math.atan2(-(p.x-e.x),-(p.z-e.z)),c=Math.cos(yaw),s=Math.sin(yaw),W=v=>({x:e.x+v[0]*c+v[2]*s,y:v[1],z:e.z-v[0]*s+v[2]*c}),out=[];
