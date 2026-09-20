@@ -5,7 +5,7 @@ import {FighterRig,pose} from './rig.js';
 import {showFists} from './punch.js';
 import {createState,beginAttack,tick,ATTACKS} from './combat.js';
 import {initBody} from './injury.js';
-import {CONTROLS,DEFAULT_BINDINGS,loadBindings,validateBindings,pressBinding,heldGuard,defenseHint} from './bindings.js';
+import {CONTROLS,DEFAULT_BINDINGS,loadBindings,validateBindings,pressBinding,heldGuard,defenseHint,readyFists} from './bindings.js';
 import {MOVES,newPlayback,stepPlayback} from './combos.js';
 
 test('solid fist striking face leads the thumb; guard restores original palms',()=>{
@@ -68,4 +68,31 @@ test('bindings persist, corrupt values fall back, punch combos preserve side',()
   const start=(...a)=>{calls.push(a);return true;};
   stepPlayback(play,.1,false,start);stepPlayback(play,.1,true,start);stepPlayback(play,.1,false,start);
   assert.deepEqual(calls,[['punch',0],['punch',1]]);
+});
+
+test('all six alternating attacks switch sides only on successful attacks',()=>{
+  for(const type of ['palm','kick','punch','hook','uppercut','snapKick']){
+    const s=createState(),bindings={...DEFAULT_BINDINGS,Mouse0:type+'Alt'},held=new Set();
+    assert.equal(validateBindings(bindings).Mouse0,type+'Alt');
+    for(const side of [0,1,0]){
+      assert.ok(pressBinding(s,bindings,'Mouse0',held));
+      assert.equal(s.attack.side,side);
+      assert.equal(pressBinding(s,bindings,'Mouse0',held),false);
+      s.attack=null;
+    }
+  }
+});
+
+test('kicks retain mouse-bound hand shape; Q/E do not affect it and guards override it',()=>{
+  const rig=new FighterRig();
+  for(const [left,right,closed]of [['kickAlt','hookAlt',true],['punchAlt','snapKickAlt',true],['kickAlt','snapKickAlt',false],['palmAlt','kickAlt',false],['palmAlt','punchAlt',false]]){
+    const b={Mouse0:left,Mouse2:right,KeyQ:'punchL',KeyE:'uppercutR'};
+    assert.equal(readyFists(b),closed);
+    for(const type of ['kick','snapKick'])for(const side of [0,1]){
+      const a={type,side,t:.1},p=pose(0,0,a);
+      showFists(rig,p,a,null,readyFists(b));
+      for(const hand of Object.values(rig.hands)){assert.equal(hand.fist.visible,closed);assert.equal(hand.palm.visible,!closed);}
+      showFists(rig,p,a,'head',readyFists(b));assert.equal(rig.hands.L.fist.visible,false);
+    }
+  }
 });

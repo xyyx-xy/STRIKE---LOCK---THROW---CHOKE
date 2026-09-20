@@ -28,3 +28,6 @@
 #binding-editor button{margin:5px 6px 0 0}
 #binding-message{min-height:22px}
 @media(max-width:500px){.binding-grid{grid-template-columns:1fr}}
+
+#combo-editor .combo-input-row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0}
+#combo-editor .combo-input-row span{color:var(--muted,#cbb89a)}

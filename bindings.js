@@ -3,7 +3,9 @@ import {beginAttack} from './combat.js';
 
 export const CONTROLS = {Mouse0:'鼠标左键', Mouse2:'鼠标右键', KeyQ:'Q', KeyE:'E'};
 export const BINDING_MOVES = {
-  ...MOVES,
+  ...MOVES, snapKickAlt:{label:'交替弹腿',type:'snapKick'},
+  hookAlt:{label:'交替摆拳',type:'hook'},
+  uppercutAlt:{label:'交替勾拳',type:'uppercut'},
   palmAlt:{label:'交替掌击',type:'palm'},
   kickAlt:{label:'交替正蹬',type:'kick'},
   punchAlt:{label:'交替直拳',type:'punch'}
@@ -36,4 +38,12 @@ export function pressBinding(state, bindings, key, held) {
 export function defenseHint(bindings, zone) {
   const keys = Object.keys(CONTROLS).filter(key => BINDING_MOVES[bindings[key]]?.guard === zone);
   return keys.length ? keys.map(key => CONTROLS[key]).join(' / ') : '未绑定防守';
+}
+
+// Mouse attack bindings alone determine the resting/kicking hand shape.
+// When both are hand attacks, use the left button as the stable default.
+export function readyFists(bindings) {
+  const move = ['Mouse0','Mouse2'].map(key => BINDING_MOVES[bindings[key]])
+    .find(move => move && ['palm','punch','hook','uppercut'].includes(move.type));
+  return !!move && move.type !== 'palm';
 }

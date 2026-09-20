@@ -38,11 +38,28 @@ export function punchPose(p, attack) {
 export function showFists(rig, pose, attack, guard, ready = false) {
   for (const side of ['L', 'R']) {
     const hand = rig.hands[side];
-    const closed = !guard && (attack ? attack.type === 'punch' : ready);
+    const closed = !guard && (!attack || ['kick','snapKick'].includes(attack.type) ? ready : ['punch','hook','uppercut'].includes(attack.type));
     for (const child of hand.group.children) child.visible = child === hand.fist ? closed : !closed;
     if (closed) {
       const direction = new T.Vector3(...pose[side + 'wrist']).sub(new T.Vector3(...pose[side + 'elbow'])).normalize();
       hand.group.quaternion.setFromUnitVectors(new T.Vector3(0, 0, -1), direction);
     }
   }
+}
+
+// Mirrored wind-up, curved contact and recovery; both reuse the solid fist model.
+export function curvedPunchPose(p,attack) {
+  const side=attack.side?'R':'L',k=attack.side?1:-1;
+  const hook=attack.type==='hook',active=hook?.22:.24,duration=hook?.52:.56;
+  const frames=hook?
+    [[0,p[side+'wrist'],p[side+'elbow']], [.10,[k*.56,1.48,-.40],[k*.57,1.30,-.14]], [active,[k*.04,1.57,-.91],[k*.41,1.48,-.54]], [duration,p[side+'wrist'],p[side+'elbow']]]:
+    [[0,p[side+'wrist'],p[side+'elbow']], [.11,[k*.24,1.02,-.35],[k*.29,.98,-.14]], [active,[k*.09,1.59,-.85],[k*.20,1.24,-.54]], [duration,p[side+'wrist'],p[side+'elbow']]];
+  const t=Math.max(0,Math.min(duration,attack.t));
+  for(let i=1;i<frames.length;i++)if(t<=frames[i][0]){
+    const a=frames[i-1],b=frames[i],v=(t-a[0])/(b[0]-a[0]),u=v*v*(3-2*v);
+    for(const [name,j]of[['wrist',1],['elbow',2]])p[side+name]=a[j].map((x,n)=>x+(b[j][n]-x)*u);
+    break;
+  }
+  p.chest[0]+=k*Math.sin(t/duration*Math.PI)*.045;
+  return p;
 }
