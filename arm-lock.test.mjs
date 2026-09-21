@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {extendedArm,ARM_LOCK} from './arm-lock.js';
-import {pose,enemyPose} from './rig.js';
+import {extendedArm,ARM_LOCK,lockHands} from './arm-lock.js';
+import {pose,enemyPose,FighterRig} from './rig.js';
 import {initBody} from './injury.js';
 import {beginAttack,createState,tick,strikeHit} from './combat.js';
 const enemy=()=>initBody({id:0,hp:100,x:0,z:-1.2,wind:.31,attackSide:0,stun:0,ko:0,phase:0,cool:99,vx:0,vz:0,flash:0});
@@ -9,10 +9,9 @@ function fixture(){const e=enemy();e.pose=pose(0,0,{type:'palm',side:0,t:.17});c
 test('only the extended attacking arm is eligible',()=>{
  const e=enemy(),q=pose(0,0,{type:'palm',side:0,t:.17});assert.ok(extendedArm(e,'Larm',q));assert.equal(extendedArm(e,'Rarm',q),false);assert.equal(extendedArm(e,'head',q),false);e.wind=0;assert.equal(extendedArm(e,'Larm',q),false);
 });
-test('success begins modeled lock then severs once without killing; failure changes nothing',()=>{
- for(const roll of [.49,.5]){const {e,p}=fixture(),s=createState();s.enemies=[e];const before=structuredClone(e);
- const ok=beginAttack(s,'armLock',{p,rng:()=>roll});assert.equal(ok,roll<.5);
- if(!ok){assert.equal(s.attack,null);assert.deepEqual(e,before);continue;}
+test('valid catches always start the lock without a random roll and sever once without killing',()=>{
+ for(const roll of [0,.49,.5,.99,1]){const {e,p}=fixture(),s=createState();s.enemies=[e];
+ const ok=beginAttack(s,'armLock',{p,rng:()=>{throw Error('valid catch must not roll probability: '+roll);}});assert.equal(ok,true);
  assert.ok(e.armLock);assert.equal(e.body.Larm.gone,false);tick(s,p,.2,null,()=>1);assert.ok(enemyPose(e).Lwrist);const events=tick(s,p,.33,null,()=>1);assert.equal(events.filter(x=>x.type==='sever').length,1);assert.equal(e.body.Larm.gone,true);assert.equal(e.hp,100);assert.equal(s.kills,0);tick(s,p,.4);assert.ok(e.blood<100);assert.equal(s.attack,null);
  }
 });
@@ -43,4 +42,32 @@ test('reference animation separates hand roles, mirrors and returns to rest',()=
  e.armLock.t=.46;const folded=enemyPose(e);
  for(const [a,b]of [['Lshoulder','Lelbow'],['Lelbow','Lwrist']]){const length=q=>Math.hypot(...q[a].map((x,i)=>x-q[b][i]));assert.ok(Math.abs(length(initial)-length(folded))<1e-9);}
  assert.ok(folded.Lwrist[1]>folded.Lelbow[1]);
+});
+
+
+test('lock palms, thumbs and finger curls match front/back roles and reset',()=>{
+ for(const side of [0,1]){
+  const rig=new FighterRig(),lead=side?'L':'R',rear=side?'R':'L';
+  for(const t of [.12,.28,.46,.52]){
+   const a={type:'armLock',side,t},q=pose(0,0,a);
+   rig.set(q);rig.setHands(.95,.95);lockHands(rig,a);rig.root.updateMatrixWorld(true);
+   const direction=(hand,v)=>rig.hands[hand].group.localToWorld(v).sub(rig.hands[hand].group.getWorldPosition(v.clone().set(0,0,0)));
+   const vector=rig.root.position.clone();
+   assert.ok(direction(lead,vector.clone().set(0,-1,0)).y>.99,'front palm up');
+   assert.ok(direction(rear,vector.clone().set(0,-1,0)).y<-.99,'rear palm down');
+   const h=rig.hands[lead],thumb=direction(lead,h.thumb.position.clone());
+   assert.ok(side?thumb.x>0:thumb.x<0,'thumb mirrors to outer screen side');
+   for(const [hand,sign] of [[lead,1],[rear,-1]]){
+    const f=rig.hands[hand].fingers[0][0];
+    const root=f.getWorldPosition(vector.clone());
+    const tip=f.localToWorld(vector.clone().set(0,0,-.05));
+    assert.ok((tip.y-root.y)*sign>0,'front curls up, rear curls down');
+   }
+  }
+  rig.set(pose());rig.setHands(.8,.8);lockHands(rig,null);
+  for(const [hand,h]of Object.entries(rig.hands)){
+   assert.equal(h.thumb.position.x,hand==='L'?.075:-.075);
+   assert.equal(h.fingers[0][0].rotation.x,.12);
+  }
+ }
 });
