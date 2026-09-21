@@ -48,7 +48,7 @@ test('all four inputs can use every single move, fixed side or held defense',()=
     const bindings={...DEFAULT_BINDINGS,[key]:id},held=new Set([key]),s=createState();
     const result=pressBinding(s,bindings,key,held);
     if(move.guard){assert.equal(result,false);assert.equal(heldGuard(bindings,held),move.guard);held.clear();assert.equal(heldGuard(bindings,held),null);}
-    else{assert.ok(result);assert.equal(s.attack.type,move.type);assert.equal(s.attack.side,move.side);}
+    else if(move.type==='armLock'){assert.equal(result,false);}else{assert.ok(result);assert.equal(s.attack.type,move.type);assert.equal(s.attack.side,move.side);}
   }
 });
 test('rebound defense overrides and release restores another held defense; stale combo guard clears on attack',()=>{

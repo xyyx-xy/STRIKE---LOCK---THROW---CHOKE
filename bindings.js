@@ -24,14 +24,14 @@ export function heldGuard(bindings, held) {
   // Latest pressed defense wins; releasing it restores any other held defense.
   return [...held].reverse().map(key => BINDING_MOVES[bindings[key]]?.guard).find(Boolean) || null;
 }
-export function pressBinding(state, bindings, key, held) {
+export function pressBinding(state, bindings, key, held, context=null) {
   const move = BINDING_MOVES[bindings[key]];
   if (!move) return false;
   state.guard = heldGuard(bindings, held);
   if (move.guard) return false;
   const previous = state.sides[move.type];
   if (move.side !== undefined) state.sides[move.type] = move.side;
-  const started = beginAttack(state, move.type);
+  const started = beginAttack(state, move.type, context);
   if (!started) state.sides[move.type] = previous;
   return started;
 }
