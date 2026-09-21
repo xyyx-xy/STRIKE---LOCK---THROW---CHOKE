@@ -25,7 +25,7 @@ Three.js + WebGL 第一人称近战原型。所有运行依赖均在本地，无
 4. 源码在本目录（当前文件夹名 `STRIKE · LOCK · THROW · CHOKE`，游戏标题仍为《打極投絞》）；`~/Library/Caches/da-ji-tou-jiao-preview` 是启动器生成的预览副本。修改源码后同步预览，不要只改缓存。
 5. 保留其他开发者已有修改，尤其 v0.1 正蹬分段、第一人称踢腿关键帧及掌形。涉及它们时同时核对下列多个入口。
 
-导航核对日期：2026-09-20（v0.7）。新增代码请采用可读的分行格式。
+导航核对日期：2026-09-21（画质与地图扩展）。新增代码请采用可读的分行格式。
 
 ## 运行环境与操作
 
@@ -49,6 +49,8 @@ Three.js + WebGL 第一人称近战原型。所有运行依赖均在本地，无
 - 玩家暂用总生命；NPC 才有分部位受伤、失血、断肢。关节技、主动摔投、绞技、武器及完整游戏存档尚未实现。自定义招式已有本地存储。
 
 ## 环境、酒馆与渲染在哪里
+
+**新增地图从 `maps/README.md` 开始。地图注册在 `maps/registry.js`，工厂放 maps/ 目录；当前仅酒馆，无麦田。画质统一配置在 `quality.js`。**
 
 | 文件与行号 | 入口/部分 | 负责内容 |
 |---|---|---|
@@ -223,3 +225,43 @@ node --test *.test.mjs
 - `punch.js:41` 的 showFists：待机、正蹬、弹腿均沿用 ready 手型；实际手部出招仍使用该招拳/掌模型，防守优先。
 - `game.js:3,44`：导入 readyFists 并用于第一人称；踢腿时 setHands 沿用待机张掌参数，避免拇指突然变形。
 - `punch-bindings.test.mjs`：覆盖两种腿法、左右腿、拳腿/掌腿/双腿绑定、Q/E 不干扰以及防守覆盖。
+
+## 五档画质与选图入口
+
+本次基于用户回档版本，不恢复此前的批量绘制优化。开始/暂停菜单的画质自动保存；选图面板点击卡片预选，点击进入地图后自动保存并入场；关闭取消预选。画质立即生效且不重开战斗，切图才重开。默认中档。旧麦田存储值回退酒馆。
+
+| 档位 | 像素比上限 | MSAA | 阴影尺寸 |
+|---|---:|---:|---:|
+| 超低 | 0.65 | 0 | 关闭 |
+| 低 | 0.85 | 0 | 512 |
+| 中 | 1.25 | 2 | 1024 |
+| 高 | 1.7 | 4 | 2048 |
+| 超高 | 2 | 4 | 4096 |
+
+实际采样/阴影尺寸按显卡能力封顶；像素比不超过设备像素比。仅改变渲染，不影响人数、血液数量、伤害和动作。超高可能增加 GPU 负担。
+
+| 文件与行号 | 入口/职责 |
+|---|---|
+| `quality.js:2–9` | QUALITY_PRESETS / loadQuality，五档唯一数值源，存储键 da-ji-tou-jiao.quality |
+| `quality.js:10–26` | applyQuality，分辨率、阴影开关/尺寸、GPU 能力限制、MSAA 缓冲重建 |
+| `quality.js:27–34` | mountQualityPicker，#quality-select，自动保存与失败提示 |
+| `maps/registry.js:3–7` | MAPS / DEFAULT_MAP / loadMap，注册工厂/名字/出生点/预览视角；选图数据源 |
+| `maps/manager.js:3–12` | mountMap，隔离地图场景、复制背景雾、切图释放几何/材质/贴图/阴影 |
+| `maps/manager.js:13` | 转导 maps/picker.js 的 mountMapPicker，旧下拉框已移除 |
+| `maps/README.md` | 其他智能体必读：新增地图步骤、arena 接口、尺寸限制和关联代码 |
+| `game.js:10,15–16` | 设置导入、关闭画布重复抗锯齿、载入地图与画质 ID |
+| `game.js:27,45` | reset 使用注册出生点；frame 使用注册预览视角及可选 arena.update |
+| `game.js:60–73` | refreshQuality / refreshMapLabels 和两类设置回调：切图清场后挂载，重新应用画质 |
+| `style.css:35–38` | .map-setting / .quality-setting，选图画质表单和菜单滚动 |
+| `settings.test.mjs` | 五档参数应用与设备上限、异常存储回退、重复地图挂载释放 |
+
+旧 tavern.js 保留原位置与原造型，方便对照；后续新地图遵循 maps/README.md，不要在 game.js 内堆积场景代码。
+
+## 选图前端页面
+
+- `maps/picker.js:3–13`：mountMapPicker 创建 #map-open 菜单入口和原生 dialog；独立大图卡片、场地档案、标签及进入地图按钮。
+- `maps/picker.js:14–31`：render / 卡片生成，完全读取 MAPS；description、subtitle、tags、thumbnail 为可选元数据，有默认回退。当前仅酒馆；不展示虚构可玩地图。
+- `maps/picker.js:32–41`：打开/关闭/键盘隔离/进入；浏览卡片不销毁当前战斗，进入不同地图才调用 game.js 切图回调。同图进入继续当前试炼；点击进入自动保存选择。Esc 与关闭按钮退出页面。
+- `maps/registry.js:4`：酒馆前端元数据；`maps/previews/tavern.svg` 为手绘风格场景示意图，并非截图。未来地图提供 thumbnail 路径即可显示预览。
+- `style.css:40–44`：.map-open / .arena-dialog / .arena-card / .arena-detail / .arena-bottom，独立选图样式、窄屏单列及固定可见操作栏。
+- `maps/README.md` 同步卡片元数据扩展步骤。主游戏不需要为新增地图写 UI 分支。

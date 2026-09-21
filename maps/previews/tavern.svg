@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600">
+<defs><linearGradient id="wall" x2="0" y2="1"><stop stop-color="#101e1a"/><stop offset="1" stop-color="#355044"/></linearGradient><linearGradient id="floor" x2="0" y2="1"><stop stop-color="#76552d"/><stop offset="1" stop-color="#2c2920"/></linearGradient><radialGradient id="glow"><stop stop-color="#eec474" stop-opacity=".42"/><stop offset="1" stop-color="#edbb65" stop-opacity="0"/></radialGradient></defs>
+<path fill="url(#wall)" d="M0 0h1000v600H0z"/><path fill="url(#floor)" d="M0 350h1000v250H0z"/>
+<path fill="#182b24" d="M0 0l180 110v240L0 500zM1000 0L820 110v240l180 150z"/>
+<g stroke="#b89a5e" stroke-width="8" fill="#537a70"><path d="M34 160l95 22v128l-95 34zM870 182l95-22v184l-95-34z"/></g>
+<g stroke="#263f33" stroke-width="6"><path d="M82 170v159m-48-79l95-5m789-75v159m-48-84l95 5"/></g>
+<ellipse cx="500" cy="220" rx="330" ry="240" fill="url(#glow)"/>
+<g fill="#ae8150"><path d="M300 216h400v12H300zm0 73h400v12H300z"/></g>
+<g fill="#748349"><path d="M320 179h12v36h-12zm82 13h13v24h-13zm155-20h14v44h-14zm103 9h12v35h-12zm-301 81h14v26h-14zm156-16h13v42h-13zm111 12h12v30h-12z"/></g>
+<g fill="#b18643"><path d="M373 184h10v32h-10zm117-6h13v38h-13zm126 21h13v17h-13zm-295 48h12v42h-12zm113 17h15v25h-15zm127-11h12v36h-12zm112 0h12v36h-12z"/></g>
+<path fill="#553c25" d="M255 327h490v90H255z"/><path fill="#b98b4b" d="M236 315h528v18H236z"/><path fill="#392f22" d="M267 350h464v52H267z"/>
+<g stroke="#282c24" stroke-width="3" opacity=".65"><path d="M500 417v183m-100-183L270 600m330-183l130 183m-380-183L10 600m640-183l240 183M0 457h1000M0 519h1000M0 584h1000"/></g>
+<g fill="#644b2b"><path d="M111 437h16v104h-16zm170 0h16v104h-16zm419 0h16v104h-16zm170 0h16v104h-16z"/></g>
+<g fill="#af8243"><path d="M81 427l45-27h166l32 27v17H81zm597 0l32-27h166l45 27v17H678z"/></g>
+<g fill="#4e6840"><path d="M178 363h13v51h-13zm615 0h13v51h-13z"/></g>
+<g stroke="#131e19" stroke-width="4"><path d="M345 0v114M655 0v114"/></g><g fill="#eac586"><path d="M345 108l-42 24h84zm310 0l-42 24h84z"/></g>
+<path fill="#142018" opacity=".25" d="M0 0h1000v600H0z"/>
+<text x="46" y="550" fill="#e4c28a" font-family="sans-serif" font-size="13" letter-spacing="5">THE LAST CALL</text>
+</svg>
