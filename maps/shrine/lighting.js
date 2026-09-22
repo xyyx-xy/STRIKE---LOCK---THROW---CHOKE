@@ -1,0 +1,2 @@
+import * as THREE from '../../vendor/three.module.js';
+export function createLighting(scene){scene.add(new THREE.HemisphereLight('#dcebe0','#69724e',2.25));const sun=new THREE.DirectionalLight('#fff1d1',2.6);sun.position.set(-17,28,12);sun.target.position.set(0,0,-4);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-29,right:29,top:29,bottom:-29,near:1,far:80});sun.shadow.normalBias=.035;sun.shadow.bias=-.00012;sun.shadow.radius=3;scene.add(sun,sun.target);return sun;}

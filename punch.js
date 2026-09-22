@@ -38,7 +38,7 @@ export function punchPose(p, attack) {
 export function showFists(rig, pose, attack, guard, ready = false) {
   for (const side of ['L', 'R']) {
     const hand = rig.hands[side];
-    const closed = !guard && (!attack || ['kick','snapKick'].includes(attack.type) ? ready : ['punch','hook','uppercut'].includes(attack.type));
+    const closed = (!guard || guard === 'knee') && (!attack || ['kick','snapKick'].includes(attack.type) ? ready : ['punch','hook','uppercut'].includes(attack.type));
     for (const child of hand.group.children) child.visible = child === hand.fist ? closed : !closed;
     if (closed) {
       const direction = new T.Vector3(...pose[side + 'wrist']).sub(new T.Vector3(...pose[side + 'elbow'])).normalize();

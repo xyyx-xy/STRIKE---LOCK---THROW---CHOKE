@@ -22,7 +22,7 @@ export function loadBindings(storage) {
 }
 export function heldGuard(bindings, held) {
   // Latest pressed defense wins; releasing it restores any other held defense.
-  return [...held].reverse().map(key => BINDING_MOVES[bindings[key]]?.guard).find(Boolean) || null;
+  const guards=[...held].reverse().map(key => BINDING_MOVES[bindings[key]]?.guard);return guards.includes('head')&&guards.includes('knee')?'headKnee':guards.find(Boolean)||null;
 }
 export function pressBinding(state, bindings, key, held, context=null) {
   const move = BINDING_MOVES[bindings[key]];

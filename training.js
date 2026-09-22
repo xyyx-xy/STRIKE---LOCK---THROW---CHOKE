@@ -5,7 +5,7 @@ export function validateTraining(raw={}) {
   const out={...TRAINING_DEFAULTS};
   out.count=Number.isFinite(Number(raw.count))?Math.max(0,Math.min(10,Math.round(Number(raw.count)))):1;
   for(const key of ['moving','attacking','invincible','respawn'])if(typeof raw[key]==='boolean')out[key]=raw[key];
-  if(['none','head','torso','auto'].includes(raw.guard))out.guard=raw.guard;
+  if(['none','head','torso','knee','auto'].includes(raw.guard))out.guard=raw.guard;
   if([...moves,'mixed'].includes(raw.move))out.move=raw.move;
   return out;
 }

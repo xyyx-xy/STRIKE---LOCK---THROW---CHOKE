@@ -6,7 +6,7 @@ export function mountTrainingPanel(storage,onChange,onReset) {
     <div class="training-grid">
       <label>敌人数量 <input name="count" type="number" min="0" max="10" step="1"></label>
       <label>敌人招式 <select name="move"><option value="punch">直拳</option><option value="palm">掌击</option><option value="hook">摆拳</option><option value="uppercut">勾拳</option><option value="kick">正蹬</option><option value="snapKick">弹腿</option><option value="mixed">混合招式</option></select></label>
-      <label>敌人防守 <select name="guard"><option value="none">不防守</option><option value="head">头部防守</option><option value="torso">三战躯干防守</option><option value="auto">自动防守</option></select></label>
+      <label>敌人防守 <select name="guard"><option value="none">不防守</option><option value="head">头部防守</option><option value="torso">三战躯干防守</option><option value="knee">提膝格挡</option><option value="auto">自动防守</option></select></label>
       <label><input name="moving" type="checkbox">敌人主动追击</label>
       <label><input name="attacking" type="checkbox">敌人主动出招</label>
       <label><input name="invincible" type="checkbox">玩家无限生命</label>

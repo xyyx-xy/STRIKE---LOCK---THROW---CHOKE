@@ -12,6 +12,6 @@ test('five quality levels apply real render settings and respect GPU caps',()=>{
  assert.ok(disposed>0);assert.equal(loadQuality(undefined),'medium');assert.equal(loadQuality({getItem:()=> 'constructor'}),'medium');
 });
 test('registered arenas load, stale meadow saves fall back, maps dispose cleanly',()=>{
- assert.deepEqual(Object.keys(MAPS),['tavern','training']);assert.equal(loadMap({getItem:()=> 'meadow'}),'tavern');
+ assert.deepEqual(Object.keys(MAPS),['tavern','training','shrine','urban']);assert.equal(loadMap({getItem:()=> 'meadow'}),'tavern');
  const scene=new T.Scene();for(let i=0;i<3;i++){const arena=mountMap(scene,'tavern');assert.equal(scene.children.length,1);const p={x:100,z:100};arena.resolve(p);assert.ok(p.x<=arena.bounds.x);assert.ok(arena.entry.spawn);arena.dispose();assert.equal(scene.children.length,0);}
 });

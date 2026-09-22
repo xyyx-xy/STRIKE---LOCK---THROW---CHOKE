@@ -1,7 +1,7 @@
 # 打極投絞 · 代码导航
 
 Three.js + WebGL 第一人称格斗原型；英文副标 **STRIKE · LOCK · THROW · CHOKE**。
-「打」=打击，「極」=关节技，「投」=摔投，「絞」=绞技。已实现打击与叠肘折腕原型；主动摔投、绞技、武器尚未实现。当前有酒馆与「明庭 · 训练场」两张地图。
+「打」=打击，「極」=关节技，「投」=摔投，「絞」=绞技。已实现打击与叠肘折腕原型；主动摔投、绞技、武器尚未实现。当前有酒馆、明庭训练场、深山神社、蒼井交差点四张地图。
 
 ## 1. Agent 先读这里
 
@@ -11,7 +11,7 @@ Three.js + WebGL 第一人称格斗原型；英文副标 **STRIKE · LOCK · THR
 - 源码在当前目录 `STRIKE · LOCK · THROW · CHOKE`；`~/Library/Caches/da-ji-tou-jiao-preview` 只是预览副本，不能只改缓存。
 - 保留其他开发者改动。玩家正蹬与 NPC 正蹬有不同动画入口；改手型要同时检查玩家和 NPC。未恢复曾被用户回档的批量绘制优化。
 
-导航核对：2026-09-21，v0.10.1；叠肘折腕更名与有效抓取必定成功。
+导航核对：2026-09-22，v0.14；新增蒼井交差点都市地图。
 
 ## 2. 按任务定位
 
@@ -22,6 +22,7 @@ Three.js + WebGL 第一人称格斗原型；英文副标 **STRIKE · LOCK · THR
 | 伤害、距离、命中部位 | `combat.js:4` ATTACKS、`:15` strikeHit、`:28` specialStrike | `injury.js:7` damagePart |
 | 身体/四肢建模、步态、受击 | `rig.js:4–30`，详见肢体表 | `game.js:41,44` NPC/玩家动画 |
 | 拳、掌、防守手型 | `punch.js:38` showFists、`guard.js:4` guardHands | `game.js:41,44` 两方均需接入 |
+| 提膝格挡 | `knee-guard.js:2,5,8` 覆盖范围、肢体条件、姿态 | `guard.js:2–4`、`combat.js:20,29,55`、`viewmodel.js:2` |
 | 新增单招/改动画 | `combat.js:4`、`rig.js:8`、`combos.js:2` | `bindings.js:5`、对应招式模块、`audio.js:9–12` |
 | 断肢、爬行、跛行、流血 | `injury.js:2–9`、`rig.js:26–30` | `wound.js:17` 喷发与伤害分开 |
 | 环境与新地图 | `maps/README.md` → `maps/registry.js:4` | `tavern.js:3` 现有酒馆；`maps/picker.js:3` 选图 |
@@ -62,9 +63,9 @@ index.html → game.js 初始化 → frame（渲染）
 | `injury.js:2–5,7–9` PARTS / initBody / damagePart / tickInjury | 部位生命倍率、断肢、击晕、失血与死亡 |
 | `injury.js:6` mobility | 伤势对应移动模式/速度，动画由 rig.js 实现 |
 | `movement.js:3` movePlayer | 玩家加减速、冲刺与方向换算 |
-| `combos.js:2–6` MOVES / validateCombo / newPlayback / stepPlayback / loadCombos | 15 个单招目录、连招校验/播放/存储；叠肘折腕未满足抓取条件时跳过该步 |
+| `combos.js:2–6` MOVES / validateCombo / newPlayback / stepPlayback / loadCombos | 16 个单招目录、连招校验/播放/存储；叠肘折腕未满足抓取条件时跳过该步 |
 | `bindings.js:4–19` CONTROLS / BINDING_MOVES / loadBindings | 鼠标左右键、Q/E 目录、默认值、读取与校验 |
-| `bindings.js:23,27,38,45` heldGuard / pressBinding / defenseHint / readyFists | 防守优先级、出招、提示、玩家待机/踢腿手型 |
+| `bindings.js:23,27,38,45` heldGuard / pressBinding / defenseHint / readyFists | 防守组合/优先级、出招、提示、玩家待机/踢腿手型；heldGuard 同时按头防与膝防返回 headKnee |
 | `binding-editor.js:3,37` mountBindingEditor / save | 单招选择与恢复默认，修改即保存 |
 | `combo-editor.js:3,9,13` mountComboEditor / render / save | 三栏连招、增删排序、重绑触发键、自动保存 |
 | `input.js:1,2,12` INPUT_RE / inputLabel / captureInput | 触发键校验、中文标签、键鼠/手柄捕获 |
@@ -82,16 +83,21 @@ index.html → game.js 初始化 → frame（渲染）
 | `rig.js:26–28` injuryPose | 缺腿双臂爬、单臂拖、无臂挪、击晕（26）；跛行/跪地（27）；防守（28） |
 | `rig.js:29–30` enemyPose / setInjuries | NPC 姿态合成；隐藏断臂、断腿、断脚对应网格 |
 | `punch.js:4,24,38,51` buildFist / punchPose / showFists / curvedPunchPose | 方块拳模、直拳、拳掌切换、摆拳/勾拳关键帧 |
-| `guard.js:2–4` guardPose / guardBlocks / guardHands | 合臂护头、三战护躯干、格挡方向高度；三战掌心向内 |
+| `guard.js:2–4` guardPose / guardBlocks / guardHands | 合臂护头、三战护躯干、格挡方向高度；三战掌心向内；knee 分派给 knee-guard.js，guardBlocks 第五参数传入来袭招式 |
+| `knee-guard.js:2–34` kneeCovers / canKneeGuard / kneeGuardPose / kneeGuardViewPose / updateKneeSide / combinedCovers | 仅防正面正蹬/弹腿的躯干、腿、脚；不防头与拳掌；腿脚完整才能提膝，第 11 行出招侧膝抬高 0.28（最初 0.32），保持骨长；第 17 行仅第一人称按左右侧向内偏移 0.06，不额外下移/前移，由 game.js:44 调用，保持膝盖可见并避开小臂 |
 | `snap-kick.js:3,6,21,34` SNAP_KICK / snapImpact / snapKickPose / kneelPose | 弹腿参数/效果、快速伸收腿、单膝硬直 |
 | `arm-lock.js:2,3,10,16` ARM_LOCK / extendedArm / startArmLock / tickArmLock | 伸直攻击臂检测、有效抓取必定成功（100%）、抓取与延迟断臂；空挥仅播放动画 |
 | `arm-lock.js:32,41,54,66` LOCK_FRAMES / armLockPose / lockedEnemyPose / lockHands | 叠臂关键帧、玩家镜像动作、敌人受控姿态；lockHands（66–96）控制前手掌心向上/拇指左侧、小臂逆时针旋转、后手向下卷指，左前手镜像；退出恢复拇指位置 |
-| `game.js:41` NPC 骨架更新 | 调用 showFists：拳法用拳、掌击/防守用掌；待机/踢腿按 moves 首个手部招式，没有则用掌 |
+| `game.js:41` NPC 骨架更新 | 调用 showFists：拳法用拳、掌击/手臂防守用掌；提膝格挡保持待机手型；待机/踢腿按 moves 首个手部招式，没有则用掌 |
 | `game.js:44` handPose / ka / lockHands | 玩家第一人称偏移与独立正蹬关键帧；拳掌切换、叠肘折腕手型 |
-| `viewmodel.js:2` updateViewVisibility | 第一人称手臂与出招腿的可见性 |
+| `viewmodel.js:2` updateViewVisibility | 第一人称手臂、出招腿与提膝格挡对应腿的可见性（第三参数 guard、第四参数 kneeSide） |
 | `previews/arm-lock.html:1`、`previews/arm-lock.js:1–18` | 独立叠肘折腕检视页：双视角、滑杆、播放、镜像；不接入战斗或存档 |
 
-手型共用 `showFists`，不要只改手指弯曲参数。玩家待机/踢腿按鼠标两键首个手部招式选拳/掌；Q/E 不影响默认手型。断肢隐藏由手部父组控制。
+提膝格挡：暂停页单招中选择「提膝格挡」（`combos.js:2` 的 guardKnee），可绑定四键并加入限时连招。训练防守选择器同样可选（`training.js:8`、`training-panel.js:8`）。`combat.js:20,29` 处理 NPC 格挡并跳过伤害/击退/弹腿附加效果；`:55` 处理玩家格挡；`game.js:36,40,45` 负责提示、状态文字和第一人称显示。
+
+组合防守：招式目录仅一个 `guardKnee`（提膝格挡），保留原存储 ID。每次重新激活左右交替，`knee-guard.js:26` 的 updateKneeSide 由 `game.js:40` / `combat.js:21` 调用；`rig.js:28` 将 NPC kneeSide 传入姿态。`bindings.js:23` 将同时按住的头防＋膝防合成 `headKnee`；松开一个保留另一个。`guard.js:2–4` 叠加姿态、判定与手型；`knee-guard.js:31` combinedCovers：头/腿/脚防六种拳腿，躯干仅防正蹬/弹腿，背后仍不防。单独膝防维持原规则。`game.js:44–45` 传入 kneeSide，第一人称显示对应腿；`:28` 暂停清除提膝激活标记。
+
+手型共用 `showFists`，不要只改手指弯曲参数。`punch.js:41` 仅头防/躯干防守强制张掌，提膝格挡沿用 ready。玩家待机/踢腿/提膝格挡按鼠标两键首个手部招式选拳/掌；Q/E 不影响默认手型。断肢隐藏由手部父组控制。
 
 ### 环境、渲染与特效
 
@@ -100,9 +106,13 @@ index.html → game.js 初始化 → frame（渲染）
 | `tavern.js:3–7` createTavern / mat / box | 酒馆工厂、背景雾、灯光、材质与方块工具 |
 | `tavern.js:8–17` 环境模型 | 地板墙体（8–10）；吧台瓶架（11–12）；桌椅障碍（13–15）；吊灯窗户（16–17），后墙无牌匾 |
 | `tavern.js:18–22` inside / resolve / clear / steer | 家具碰撞、攻击遮挡、NPC 绕行、边界 |
-| `maps/registry.js:4,9` MAPS / loadMap | 地图工厂、名字、出生点、预览视角、卡片元数据与存储回退 |
+| `maps/registry.js:4,11` MAPS / loadMap | 地图工厂、名字、出生点、预览视角、卡片元数据与存储回退 |
 | `maps/manager.js:3,13` mountMap / mountMapPicker 转导 | 地图挂载与资源释放，选图 UI 入口 |
 | `maps/picker.js:3,14–41` mountMapPicker / render / 事件 | 卡片、场地详情、预选/取消/进入；读取注册表，不硬编码地图 |
+| `maps/urban-map.js:14,21,29–33` crossingBounds / createUrbanMap / update / dispose | 都市路口战斗范围、环境装配、广告/信号灯/尘粒更新、隐藏广告纹理释放；建筑等细分导航见 `maps/urban/README.md` |
+| `maps/registry.js:8` urban；`game.js:61` refreshMapLabels | 都市元数据；按地图应用 far/exposure，切回旧地图恢复 70/1.35；预览 maps/previews/urban.png |
+| `maps/shrine-map.js:14,26,32,37` createShrineMap / resolve / update / dispose | 神社组装、圆形战斗边界、风动与落叶、动画释放；建筑植被分文件导航见 `maps/shrine/README.md` |
+| `maps/registry.js:7` shrine；`game.js:62` bright-map；`style.css:48` | 神社注册与明亮场景 HUD 对比度；卡片为 maps/previews/shrine.svg |
 | `maps/previews/tavern.svg` | 酒馆卡片示意图；新地图扩展协议见 `maps/README.md` |
 | `quality.js:2,9,10,27` QUALITY_PRESETS / loadQuality / applyQuality / mountQualityPicker | 五档唯一配置源，像素比/MSAA/阴影、GPU 上限、自动保存 |
 | `retro.js:4–15` ScenePass | 全分辨率多重采样与屏幕血迹合成；历史文件名，已不是像素滤镜 |
@@ -111,11 +121,11 @@ index.html → game.js 初始化 → frame（渲染）
 | `wound.js:4,17` woundFrame / WoundJets | 跟随断口喷发 3.5 秒；game.js:36 注册、:43 更新、:27 清空；不负责扣血 |
 | `audio.js:2–16` FightAudio | 本地 Web Audio 合成挥击、命中、受伤、回合音效 |
 
-地图包含酒馆试炼与明庭训练场。改画质不重开，切换不同地图才重开。新增地图先读 `maps/README.md`，特别核对出生圈、远裁面和血液边界；不要假定任意尺寸已受支持。
+地图包含酒馆试炼、明庭训练场、深山神社和蒼井交差点试炼。改画质不重开，切换不同地图才重开。新增地图先读 `maps/README.md`，特别核对出生圈、远裁面和血液边界；不要假定任意尺寸已受支持。
 
 ### 训练场（独立地图 + 独立规则）
 
-选图进入「明庭 · 训练场」，按 P/ESC 在暂停页调整。默认 1 人静止、不攻击；0 人可演示动作，最多 10 人。可指定六种攻击或混合、头防/躯干防/自动/不防守、追击、出招、玩家无限生命和倒地 3 秒补充。关闭追击只禁止主动移动，仍保留命中击退。修改设置自动保存并重置练习；重置按钮恢复生命/肢体并清理血迹、尸体。没有自动波次。
+选图进入「明庭 · 训练场」，按 P/ESC 在暂停页调整。默认 1 人静止、不攻击；0 人可演示动作，最多 10 人。可指定六种攻击或混合、头防/躯干防/提膝格挡/自动/不防守、追击、出招、玩家无限生命和倒地 3 秒补充。关闭追击只禁止主动移动，仍保留命中击退。修改设置自动保存并重置练习；重置按钮恢复生命/肢体并清理血迹、尸体。没有自动波次。
 
 | 文件:行号 · 入口 | 职责 |
 |---|---|
@@ -143,7 +153,7 @@ index.html → game.js 初始化 → frame（渲染）
 
 ## 5. 开发、运行与验证
 
-- 本地依赖 `vendor/three.module.js`；`package.json:1` 声明 ES modules，无 npm 构建。不要修改 vendor 处理业务。
+- 本地依赖 `vendor/three.module.js` 与神社合批使用的官方 `vendor/BufferGeometryUtils.js`（许可见 `vendor/THREE-LICENSE.txt`）；`package.json:1` 声明 ES modules，无 npm 构建。不要修改 vendor 处理业务。
 - 双击 `启动试玩.command`，同步预览并打开 `http://127.0.0.1:8878/`。或源码目录运行 `python3 serve.py --port 8879`；`serve.py:9–29` 提供 no-store 本地服务。
 - WASD/Shift 移动，鼠标环视；默认左键掌击、右键正蹬，Q/E 头/躯干防守，均可重绑。P/ESC 暂停；三套连招默认 1–3，可绑定键鼠/手柄，X 取消。设置自动保存。
 - 全部规则检查：`node --test *.test.mjs`。UI/动画修改还需实际查看；文档修改核对路径、行号及函数名即可。
@@ -151,10 +161,11 @@ index.html → game.js 初始化 → frame（渲染）
 | 改动领域 | 对应测试文件 |
 |---|---|
 | 基础战斗、NPC 连续行动 | `combat.test.mjs`、`enemy-ai.test.mjs`（含十人 20 秒模拟） |
+| 提膝格挡 | `knee-guard.test.mjs:1–109`：覆盖范围、玩家/NPC 格挡、阻止附加效果、骨长、第一人称、绑定与连招 |
 | 建模/步态、伤势 | `animation.test.mjs`、`injury.test.mjs` |
 | 拳模/绑定、防守/连招、输入 | `punch-bindings.test.mjs`、`guard-combo.test.mjs`、`input.test.mjs` |
 | 摆勾拳、弹腿、叠肘折腕 | `curved-punch.test.mjs`、`snap-kick.test.mjs`、`arm-lock.test.mjs` |
-| 喷发、画质/地图 | `wound.test.mjs`、`settings.test.mjs` |
+| 喷发、画质/地图 | `wound.test.mjs`、`settings.test.mjs`、`shrine-map.test.mjs:1`（重复挂载释放、实例化/合批、边界与出生）、`urban-map.test.mjs:1`（路口边界/出生/镜头配置） |
 
 修改前用 `rg -n '函数名或选择器' 文件名` 定位，修改后用 `nl -ba 文件名` 核对导航。版本变化只追加到对应 `v*.更新.md`，不在本文件末尾继续堆叠版本章节。
 
