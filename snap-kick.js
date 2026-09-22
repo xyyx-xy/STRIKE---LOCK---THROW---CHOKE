@@ -1,6 +1,6 @@
 import {damagePart,isGone} from './injury.js';
 
-export const SNAP_KICK = {duration:.26,active:.085,range:2.15,damage:12,push:0,cone:.68,r:.085,breakChance:.20,kneelChance:.30,kneelDuration:3};
+export const SNAP_KICK = {duration:.26,active:.085,range:2.65,damage:12,push:0,cone:.68,r:.085,breakChance:.20,kneelChance:.30,kneelDuration:3};
 
 // Extra effects only apply to the body volume actually struck, after normal damage.
 export function snapImpact(e,hit,result,rng=Math.random) {
