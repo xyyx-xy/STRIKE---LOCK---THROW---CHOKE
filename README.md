@@ -1,6 +1,6 @@
 # 打極投絞 · 代码导航
 
-Three.js + WebGL 第一人称格斗原型；英文副标 **STRIKE · LOCK · THROW · CHOKE**。
+Three.js + WebGL 第一/第三人称格斗原型；英文副标 **STRIKE · LOCK · THROW · CHOKE**。
 「打」=打击，「極」=关节技，「投」=摔投，「絞」=绞技。已实现打击与叠肘折腕原型；主动摔投、绞技、武器尚未实现。当前有酒馆、明庭训练场、深山神社、蒼井交差点四张地图。
 
 ## 1. Agent 先读这里
@@ -11,7 +11,7 @@ Three.js + WebGL 第一人称格斗原型；英文副标 **STRIKE · LOCK · THR
 - 源码在当前目录 `STRIKE · LOCK · THROW · CHOKE`；`~/Library/Caches/da-ji-tou-jiao-preview` 只是预览副本，不能只改缓存。
 - 保留其他开发者改动。玩家正蹬与 NPC 正蹬有不同动画入口；改手型要同时检查玩家和 NPC。未恢复曾被用户回档的批量绘制优化。
 
-导航核对：2026-09-22，v0.15；新增蒼井交差点都市地图，弹腿射程对齐正蹬。
+导航核对：2026-09-22，v0.16.2；方向键选观察角，鼠标联动人物与镜头。
 
 ## 2. 按任务定位
 
@@ -20,6 +20,7 @@ Three.js + WebGL 第一人称格斗原型；英文副标 **STRIKE · LOCK · THR
 | 训练人数/静止/出招/重置 | `training.js:2–32`、`training-panel.js:2` | `game.js:27,73` 装配；`combat.js:17–22` 开关 |
 | 敌人追击、选招、打完不动 | `combat.js:19` 刷怪、`:22` AI、`:48` advanceEnemyAttack | `game.js:41` 显示攻击 |
 | 伤害、距离、命中部位 | `combat.js:4` ATTACKS、`:15` strikeHit、`:28` specialStrike | `injury.js:7` damagePart |
+| T 键视角、缩放、镜头遮挡 | `perspective.js:12–43`，`game.js:35,45,76–88` | 全身玩家、镜头射线、准星投影；不修改战斗命中规则 |
 | 身体/四肢建模、步态、受击 | `rig.js:4–30`，详见肢体表 | `game.js:41,44` NPC/玩家动画 |
 | 拳、掌、防守手型 | `punch.js:38` showFists、`guard.js:4` guardHands | `game.js:41,44` 两方均需接入 |
 | 提膝格挡 | `knee-guard.js:2,5,8` 覆盖范围、肢体条件、姿态 | `guard.js:2–4`、`combat.js:20,29,55`、`viewmodel.js:2` |
@@ -90,6 +91,10 @@ index.html → game.js 初始化 → frame（渲染）
 | `arm-lock.js:32,41,54,66` LOCK_FRAMES / armLockPose / lockedEnemyPose / lockHands | 叠臂关键帧、玩家镜像动作、敌人受控姿态；lockHands（66–96）控制前手掌心向上/拇指左侧、小臂逆时针旋转、后手向下卷指，左前手镜像；退出恢复拇指位置 |
 | `game.js:41` NPC 骨架更新 | 调用 showFists：拳法用拳、掌击/手臂防守用掌；提膝格挡保持待机手型；待机/踢腿按 moves 首个手部招式，没有则用掌 |
 | `game.js:44` handPose / ka / lockHands | 玩家第一人称偏移与独立正蹬关键帧；拳掌切换、叠肘折腕手型 |
+| `perspective.js:8,12,18–21` orbitOffset / Perspective / toggle / tilt / zoom / update | 斜侧俯视，2.6–16 距离、俯仰 0.18–1.35；独立全身 FighterRig，复用攻击/防守/叠肘手型 |
+| `perspective.js:48,54` updateCameraKeys / mouseAim | 方向键分派镜头/第一人称；鼠标修改玩家 yaw/pitch，第三人称 orbitYaw 同步水平增量、tilt 同步垂直增量；保留方向键选定的水平相对观察角 |
+| `perspective.js:32–43` 镜头跟随与遮挡 | 检测地图根场景网格，墙顶遮挡时收近；位置/角度/地图变化才重算射线；不碰 NPC 和血滴 |
+| `game.js:20,35,40,45,76–88` perspective / 输入 / frame / updatePerspectiveAim | T 优先切换；第三人称方向键仅环绕镜头、鼠标联动角色朝向/瞄准与观察镜头，滚轮缩放；第三人称隐藏第一人称手臂，投影角色前方实际瞄准点 |
 | `viewmodel.js:2` updateViewVisibility | 第一人称手臂、出招腿与提膝格挡对应腿的可见性（第三参数 guard、第四参数 kneeSide） |
 | `previews/arm-lock.html:1`、`previews/arm-lock.js:1–18` | 独立叠肘折腕检视页：双视角、滑杆、播放、镜像；不接入战斗或存档 |
 
@@ -156,10 +161,12 @@ index.html → game.js 初始化 → frame（渲染）
 - 本地依赖 `vendor/three.module.js` 与神社合批使用的官方 `vendor/BufferGeometryUtils.js`（许可见 `vendor/THREE-LICENSE.txt`）；`package.json:1` 声明 ES modules，无 npm 构建。不要修改 vendor 处理业务。
 - 双击 `启动试玩.command`，同步预览并打开 `http://127.0.0.1:8878/`。或源码目录运行 `python3 serve.py --port 8879`；`serve.py:9–29` 提供 no-store 本地服务。
 - WASD/Shift 移动，鼠标环视；默认左键掌击、右键正蹬，Q/E 头/躯干防守，均可重绑。P/ESC 暂停；三套连招默认 1–3，可绑定键鼠/手柄，X 取消。设置自动保存。
+- 视角：游戏中 T 切换第一人称/斜俯视；第三人称方向键左右环绕（可看正脸）、上下调观察俯仰，不改变人物朝向。鼠标控制人物朝向和攻击瞄准，镜头同步转动；方向键选定的水平相对观察角保持不变，上下仍受安全俯仰限制；滚轮缩放。WASD 仍按角色朝向移动。T 和第三人称方向键优先于连招绑定。设置只在本次页面会话保留。
 - 全部规则检查：`node --test *.test.mjs`。UI/动画修改还需实际查看；文档修改核对路径、行号及函数名即可。
 
 | 改动领域 | 对应测试文件 |
 |---|---|
+| 视角与镜头 | `perspective.test.mjs:1`：缩放/俯仰边界、全身切换、攻击角保留、天花板回避、切图恢复距离、方向键看正脸不转人、鼠标联动保持水平观察角 |
 | 基础战斗、NPC 连续行动 | `combat.test.mjs`、`enemy-ai.test.mjs`（含十人 20 秒模拟） |
 | 提膝格挡 | `knee-guard.test.mjs:1–109`：覆盖范围、玩家/NPC 格挡、阻止附加效果、骨长、第一人称、绑定与连招 |
 | 建模/步态、伤势 | `animation.test.mjs`、`injury.test.mjs` |
